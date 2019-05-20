@@ -47,7 +47,7 @@ function createResultsMenu($statusToExclude = null) {
   }
   return $menu_data;
 }
-  
+   
   
 /**
  * write execution result to DB
@@ -288,6 +288,9 @@ function write_execution(&$db,&$execSign,&$exec_data,&$issueTracker) {
           }         
         }  
       }  
+
+      // Copy attachments from latest execution ?
+
 
       $itCheckOK = !is_null($issueTracker) && 
                    method_exists($issueTracker,'addIssue');
@@ -706,8 +709,7 @@ function addIssue($dbHandler,$argsObj,$itsObj,$opt=null) {
  * copy issues from execution to another execution
  *
  */
-function copyIssues(&$dbHandler,$source,$dest)
-{
+function copyIssues(&$dbHandler,$source,$dest) {
   $debugMsg = 'FILE:: ' . __FILE__ . ' :: FUNCTION:: ' . __FUNCTION__;
 
   $tables = tlObjectWithDB::getDBTables(array('execution_bugs'));
