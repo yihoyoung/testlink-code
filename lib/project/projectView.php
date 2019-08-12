@@ -42,26 +42,32 @@ function init_args() {
   $_REQUEST = strings_stripSlashes($_REQUEST);
    
   $args = new stdClass();
-  $args->tproject_id = isset($_SESSION['testprojectID']) ? intval($_SESSION['testprojectID']) : 0 ;
-  $args->doAction = isset($_REQUEST['doAction']) ? $_REQUEST['doAction'] : 'list' ;
+ 
+  //$sk = 'testprojectID';
+  //$args->ctx_tproject_id = isset($_SESSION[$sk]) ? $_SESSION[$sk] : 0;
+  //$args->ctx_tproject_id = intval($args->ctx_tproject_id);
+  $args->tproject_id = isset($_REQUEST['tproject_id']) ? $_REQUEST['tproject_id'] : 0;
+
+  $args->tplan_id = isset($_REQUEST['tplan_id']) ? $_REQUEST['tplan_id'] : 0;
+
   $args->userID = isset($_SESSION['userID']) ? intval($_SESSION['userID']) : 0;
   $args->user = isset($_SESSION['currentUser']) ? $_SESSION['currentUser'] : null; 
+
+
+ 
+  $args->doAction = isset($_REQUEST['doAction']) ? $_REQUEST['doAction'] : 'list' ;
   $args->name = isset($_REQUEST['name']) ? trim($_REQUEST['name']) : null ;
-
-
-
-  if(!is_null($args->name))
-  {
+  if(!is_null($args->name)) {
     $args->name = trim($args->name); 
-    if(strlen($args->name) == 0)
-    {  
+    if(strlen($args->name) == 0) {  
       $args->name = null;
-    }      
-    else
-    {
+    } else {
       $args->name = substr($args->name,0,100);
     }  
   } 
+
+
+
   return $args;  
 }
 
@@ -109,6 +115,8 @@ function initializeGui(&$dbHandler,&$argsObj) {
     initIntegrations($guiObj->tprojects,$guiObj->itemQty,$tplEngine);
   }  
 
+
+  $guiObj->actions = $tproject_mgr->getViewActions($ctx);
   return array($guiObj,$tplEngine);
 }
 

@@ -13,10 +13,10 @@ some variables smarty and javascript are created on the inc_*.tpl files.
 
 {* Configure Actions *}
 {$managerURL="lib/project/projectEdit.php"}
-{$deleteAction="$managerURL?doAction=doDelete&tprojectID="}
-{$editAction="$managerURL?doAction=edit&amp;tprojectID="}
-{$createAction="$managerURL?doAction=create"}
-{$searchAction="lib/project/projectView.php?doAction=search"}
+{$deleteAction="$managerURL?doAction=doDelete&itemID="}
+{$editAction="$managerURL?doAction=edit&itemID="}
+{$createAction="$managerURL?doAction=create&tproject_id="}
+{$searchAction="lib/project/projectView.php?doAction=search&tproject_id="}
 
 
 {lang_get s='popup_product_delete' var="warning_msg"}

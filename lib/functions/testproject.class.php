@@ -4032,114 +4032,138 @@ function getPlatformsLatestTCV($tproject_id, $platform_id=0) {
 } //end function
 
 
-/**
- * @used-by getTestSpecTree()@treeMenu.inc.php
- * -1 => WITHOUT PLATFORMS
- * 
- */
-function getTCLatestVersionFilteredByPlatforms($tproject_id, $platform_id=0) {
-  $platSet = (array)$platform_id;
-  $sql = null;
-  $tcaseSet = array();
-  $delTT = false;
-  $hasTCases = false;
+  /**
+   * @used-by getTestSpecTree()@treeMenu.inc.php
+   * -1 => WITHOUT PLATFORMS
+   * 
+   */
+  function getTCLatestVersionFilteredByPlatforms($tproject_id, $platform_id=0) {
+    $platSet = (array)$platform_id;
+    $sql = null;
+    $tcaseSet = array();
+    $delTT = false;
+    $hasTCases = false;
 
-  // -1 => WITHOUT PLATFORMS
-  $getWithOutPlatforms = in_array(-1,$platSet); 
-  if( $getWithOutPlatforms ) {  
-    $this->get_all_testcases_id($tproject_id,$tcaseSet);
-    if( ($hasTCases = count($tcaseSet) > 0) ) {
-      $delTT = true;
-      $tt = 'temp_tcset_' . $tproject_id . md5(microtime());
-      $sql = "CREATE TEMPORARY TABLE IF NOT EXISTS $tt AS 
-              ( SELECT id FROM {$this->tables['nodes_hierarchy']} 
-                LIMIT 0 )";
-      $this->db->exec_query($sql);
-      $a4ins = array_chunk($tcaseSet, 2000); // MAGIC
-      foreach($a4ins as $chu) {
-        $sql = "INSERT INTO $tt (id) VALUES (" .
-               implode('),(',$chu) . ")"; 
+    // -1 => WITHOUT PLATFORMS
+    $getWithOutPlatforms = in_array(-1,$platSet); 
+    if( $getWithOutPlatforms ) {  
+      $this->get_all_testcases_id($tproject_id,$tcaseSet);
+      if( ($hasTCases = count($tcaseSet) > 0) ) {
+        $delTT = true;
+        $tt = 'temp_tcset_' . $tproject_id . md5(microtime());
+        $sql = "CREATE TEMPORARY TABLE IF NOT EXISTS $tt AS 
+                ( SELECT id FROM {$this->tables['nodes_hierarchy']} 
+                  LIMIT 0 )";
         $this->db->exec_query($sql);
+        $a4ins = array_chunk($tcaseSet, 2000); // MAGIC
+        foreach($a4ins as $chu) {
+          $sql = "INSERT INTO $tt (id) VALUES (" .
+                 implode('),(',$chu) . ")"; 
+          $this->db->exec_query($sql);
+        }
       }
     }
-  }
 
-  if( $getWithOutPlatforms && $hasTCases) {  
-    $sql = " /* WITHOUT PLATFORMS */  
-             SELECT TCVNO_PL.testcase_id FROM
-             {$this->views['tcversions_without_platforms']} TCVNO_PL   
-             JOIN {$this->views['latest_tcase_version_id']} LTVC
-             ON LTVC.tcversion_id = TCVNO_PL.id
-             JOIN $tt TT ON TT.id = TCVNO_PL.testcase_id ";
-  } else {  
-    $filter = " platform_id IN (" . implode(',',$platSet) . ")";
-    $filter_type = 'And';
-    switch($filter_type) {
-      case 'NotLinked':
-        if($hasTCases) {
-          $sql = " /* WITHOUT SPECIFIC KEYWORDS */  
-                   SELECT NHTCV.parent_id AS testcase_id  
-                   FROM {$this->tables['nodes_hierarchy']} NHTCV   
-                   JOIN {$this->views['latest_tcase_version_id']} LTCV 
-                   ON NHTCV.id = LTCV.tcversion_id 
-                   JOIN $tt TT ON TT.id = NHTCV.parent_id 
-                   WHERE NOT EXISTS
-                   (SELECT 1 FROM {$this->tables['testcase_platforms']} TCPL  
-                   WHERE TCPL.tcversion_id = LTCV.tcversion_id 
-                   AND {$filter} )";
-        } 
-      break;
-
-
-      case 'And':
-        // MAX(TK.testcase_id) needed to be able to extract
-        // Test case id.
-        $sqlCount = " /* SQL COUNT */ " .
-                    " SELECT COUNT(TPL.tcversion_id) AS HITS,
-                             MAX(TPL.testcase_id) AS testcase_id,
-                             TPL.tcversion_id
-                      FROM {$this->tables['platforms']} PL
-                      JOIN {$this->tables['testcase_platforms']} TPL
-                      ON platform_id = PL.id
-                      JOIN {$this->views['latest_tcase_version_id']} LTCV
-                      ON LTCV.tcversion_id = TPL.tcversion_id
-                      WHERE testproject_id = {$tproject_id}
-                      AND {$filter}
-                      GROUP BY TPL.tcversion_id ";
-
-        $sql = "/* Filter Type = AND */
-                SELECT PLTFOXDOG.testcase_id 
-                FROM ( $sqlCount ) AS PLTFOXDOG 
-                WHERE PLTFOXDOG.HITS=" . count($platform_id);
-      break;
+    if( $getWithOutPlatforms && $hasTCases) {  
+      $sql = " /* WITHOUT PLATFORMS */  
+               SELECT TCVNO_PL.testcase_id FROM
+               {$this->views['tcversions_without_platforms']} TCVNO_PL   
+               JOIN {$this->views['latest_tcase_version_id']} LTVC
+               ON LTVC.tcversion_id = TCVNO_PL.id
+               JOIN $tt TT ON TT.id = TCVNO_PL.testcase_id ";
+    } else {  
+      $filter = " platform_id IN (" . implode(',',$platSet) . ")";
+      $filter_type = 'And';
+      switch($filter_type) {
+        case 'NotLinked':
+          if($hasTCases) {
+            $sql = " /* WITHOUT SPECIFIC KEYWORDS */  
+                     SELECT NHTCV.parent_id AS testcase_id  
+                     FROM {$this->tables['nodes_hierarchy']} NHTCV   
+                     JOIN {$this->views['latest_tcase_version_id']} LTCV 
+                     ON NHTCV.id = LTCV.tcversion_id 
+                     JOIN $tt TT ON TT.id = NHTCV.parent_id 
+                     WHERE NOT EXISTS
+                     (SELECT 1 FROM {$this->tables['testcase_platforms']} TCPL  
+                     WHERE TCPL.tcversion_id = LTCV.tcversion_id 
+                     AND {$filter} )";
+          } 
+        break;
 
 
-      case 'Or':
-      default:
-        $sql = " /* Filter Type = OR */ " .
-               " SELECT TK.testcase_id " .
-               " FROM {$this->tables['testcase_platforms']} TPL" .
-               " JOIN {$this->views['latest_tcase_version_id']} LTVC " .
-               " ON LTVC.tcversion_id = TPL.tcversion_id " .
-               " JOIN {$this->tables['platforms']} PL " .
-               " ON PL.id = TK.platform_id " .
-               " WHERE {$filter} " .
-               " AND PL.testproject_id=" . $tproject_id;
-      break;
+        case 'And':
+          // MAX(TK.testcase_id) needed to be able to extract
+          // Test case id.
+          $sqlCount = " /* SQL COUNT */ " .
+                      " SELECT COUNT(TPL.tcversion_id) AS HITS,
+                               MAX(TPL.testcase_id) AS testcase_id,
+                               TPL.tcversion_id
+                        FROM {$this->tables['platforms']} PL
+                        JOIN {$this->tables['testcase_platforms']} TPL
+                        ON platform_id = PL.id
+                        JOIN {$this->views['latest_tcase_version_id']} LTCV
+                        ON LTCV.tcversion_id = TPL.tcversion_id
+                        WHERE testproject_id = {$tproject_id}
+                        AND {$filter}
+                        GROUP BY TPL.tcversion_id ";
+
+          $sql = "/* Filter Type = AND */
+                  SELECT PLTFOXDOG.testcase_id 
+                  FROM ( $sqlCount ) AS PLTFOXDOG 
+                  WHERE PLTFOXDOG.HITS=" . count($platform_id);
+        break;
+
+
+        case 'Or':
+        default:
+          $sql = " /* Filter Type = OR */ " .
+                 " SELECT TK.testcase_id " .
+                 " FROM {$this->tables['testcase_platforms']} TPL" .
+                 " JOIN {$this->views['latest_tcase_version_id']} LTVC " .
+                 " ON LTVC.tcversion_id = TPL.tcversion_id " .
+                 " JOIN {$this->tables['platforms']} PL " .
+                 " ON PL.id = TK.platform_id " .
+                 " WHERE {$filter} " .
+                 " AND PL.testproject_id=" . $tproject_id;
+        break;
+      }
     }
+
+    $hits = !is_null($sql) ? $this->db->fetchRowsIntoMap($sql,'testcase_id') : null;
+
+    // clean up
+    if( $delTT ) {
+      $sql = "DROP TABLE IF EXISTS $tt";
+      $this->db->exec_query($sql);
+    }
+
+    return $hits;
   }
 
-  $hits = !is_null($sql) ? $this->db->fetchRowsIntoMap($sql,'testcase_id') : null;
+  /**
+   *
+   */
+  function getViewActions( $context ) {
 
-  // clean up
-  if( $delTT ) {
-    $sql = "DROP TABLE IF EXISTS $tt";
-    $this->db->exec_query($sql);
+    $act = new stdClass();
+    $managerURL="lib/project/projectEdit.php";
+    $cc = "$managerURL?doAction=";
+    $ent = "itemID=%s";
+    $prop = array('tproject_id','tplan_id');
+    foreach( $prop as $pp ) {
+      $ent .= "&$pp=";
+      if( property_exists($context,$pp) ) {
+        $ent .= intval($context->$pp);
+      }
+    }
+
+    $act->deleteAction = "$cc=doDelete&$ent";
+    $act->editAction = "$cc=edit&$ent";
+    $act->createAction = "$cc=create&$ent";
+    $act->searchAction= 
+      "lib/project/projectView.php?doAction=search&$ent";
+
+    return $act;
   }
-
-  return $hits;
-}
-
-
 
 } // end class
