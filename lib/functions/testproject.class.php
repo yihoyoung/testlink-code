@@ -912,19 +912,17 @@ function count_testcases($id)
    * @param string $name the name to check
    * @return map with keys: status_ok, msg
    **/
-  function checkName($name)
-  {
+  function checkName($name) {
     $forbidden_pattern = config_get('ereg_forbidden');
     $ret['status_ok'] = 1;
     $ret['msg'] = 'ok';
 
-    if ($name == "")
-    {
+    if ($name == "") {
       $ret['msg'] = lang_get('info_product_name_empty');
       $ret['status_ok'] = 0;
     }
-    if ($ret['status_ok'] && !check_string($name,$forbidden_pattern))
-    {
+
+    if ($ret['status_ok'] && !check_string($name,$forbidden_pattern)) {
       $ret['msg'] = lang_get('string_contains_bad_chars');
       $ret['status_ok'] = 0;
     }
@@ -4144,24 +4142,25 @@ function getPlatformsLatestTCV($tproject_id, $platform_id=0) {
    *
    */
   function getViewActions( $context ) {
-
     $act = new stdClass();
-    $managerURL="lib/project/projectEdit.php";
-    $cc = "$managerURL?doAction=";
-    $ent = "itemID=%s";
+    $act->managerURL="lib/project/projectEdit.php";
+    $cc = "$act->managerURL?doAction";
     $prop = array('tproject_id','tplan_id');
     foreach( $prop as $pp ) {
       $ent .= "&$pp=";
       if( property_exists($context,$pp) ) {
         $ent .= intval($context->$pp);
+      } else {
+        $ent .= "0";
       }
     }
+    $ent .= "&itemID=";
 
-    $act->deleteAction = "$cc=doDelete&$ent";
-    $act->editAction = "$cc=edit&$ent";
-    $act->createAction = "$cc=create&$ent";
+    $act->deleteAction = "$cc=doDelete$ent";
+    $act->editAction = "$cc=edit$ent";
+    $act->createAction = "$cc=create$ent";
     $act->searchAction= 
-      "lib/project/projectView.php?doAction=search&$ent";
+      "lib/project/projectView.php?doAction=search$ent";
 
     return $act;
   }

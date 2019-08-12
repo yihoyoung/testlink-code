@@ -12,11 +12,11 @@ some variables smarty and javascript are created on the inc_*.tpl files.
 {config_load file="input_dimensions.conf" section=$cfg_section}
 
 {* Configure Actions *}
-{$managerURL="lib/project/projectEdit.php"}
-{$deleteAction="$managerURL?doAction=doDelete&itemID="}
-{$editAction="$managerURL?doAction=edit&itemID="}
-{$createAction="$managerURL?doAction=create&tproject_id="}
-{$searchAction="lib/project/projectView.php?doAction=search&tproject_id="}
+{$managerURL=$gui->actions->managerURL}
+{$deleteAction=$gui->actions->deleteAction}
+{$editAction=$gui->actions->editAction}
+{$createAction=$gui->actions->createAction}
+{$searchAction=$gui->actions->searchAction}
 
 
 {lang_get s='popup_product_delete' var="warning_msg"}
@@ -83,7 +83,10 @@ var del_action=fRoot+'{$deleteAction}';
 {else}
   <form method="post" id="testProjectView" name="testProjectView" action="{$managerURL}">
     <input type="hidden" name="doAction" id="doAction" value="">
-    <input type="hidden" name="tprojectID" id="tprojectID" value="">
+    <input type="hidden" name="itemID" id="itemID" value="">
+
+    <input type="hidden" name="tproject_id" id="tproject_id" value="{$gui->tproject_id}">
+    <input type="hidden" name="tplan_id" id="tplan_id" value="{$gui->tplan_id}">
 
   <table id="item_view" class="table table-bordered sortable">
     <thead class="thead-dark">
@@ -136,12 +139,12 @@ var del_action=fRoot+'{$deleteAction}';
         {if $testproject.opt->requirementsEnabled}
             <input type="image" style="border:none" 
                    title="{$labels.click_to_disable}"  alt="{$labels.click_to_disable}" 
-                   onClick = "doAction.value='disableRequirements';tprojectID.value={$testproject.id};"
+                   onClick = "doAction.value='disableRequirements';itemID.value={$testproject.id};"
                    src="{$tlImages.on}"/>
           {else}
             <input type="image" style="border:none" 
                    title="{$labels.click_to_enable}"  alt="{$labels.click_to_enable}" 
-                   onClick = "doAction.value='enableRequirements';tprojectID.value={$testproject.id};"
+                   onClick = "doAction.value='enableRequirements';itemID.value={$testproject.id};"
                    src="{$tlImages.off}"/>
           {/if}
       </td>
@@ -149,12 +152,12 @@ var del_action=fRoot+'{$deleteAction}';
         {if $testproject.active}
             <input type="image" style="border:none" 
                    title="{$labels.active_click_to_change}"  alt="{$labels.active_click_to_change}" 
-                   onClick = "doAction.value='setInactive';tprojectID.value={$testproject.id};"
+                   onClick = "doAction.value='setInactive';itemID.value={$testproject.id};"
                    src="{$tlImages.on}"/>
           {else}
             <input type="image" style="border:none" 
                    title="{$labels.inactive_click_to_change}"  alt="{$labels.inactive_click_to_change}" 
-                   onClick = "doAction.value='setActive';tprojectID.value={$testproject.id};"
+                   onClick = "doAction.value='setActive';itemID.value={$testproject.id};"
                    src="{$tlImages.off}"/>
           {/if}
       </td>

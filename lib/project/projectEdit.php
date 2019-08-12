@@ -37,8 +37,9 @@ $reloadType = 'none';  // domain 'none','reloadNavBar'
 
 $tproject_mgr = new testproject($db);
 $args = init_args($tproject_mgr, $_REQUEST);
-$gui = initializeGui($db,$args);
 
+
+$gui = initializeGui($db,$args,$tproject_mgr);
 $of = web_editor('notes',$_SESSION['basehref'],$editorCfg) ;
 $status_ok = 1;
 
@@ -450,18 +451,15 @@ function doUpdate($argsObj,&$tprojectMgr) {
   $op->oldName = $oldObjData['name'];
 
   $check_op = crossChecks($argsObj,$tprojectMgr);
-  foreach($key2get as $key)
-  {
-    $op->$key=$check_op[$key];
+  foreach($key2get as $key) {
+    $op->$key = $check_op[$key];
   }
 
-  if($op->status_ok)
-  {
+  if($op->status_ok) {
     $options = prepareOptions($argsObj);
     if( $tprojectMgr->update($argsObj->itemID,trim($argsObj->tprojectName),
                              $argsObj->color, $argsObj->notes, $options, $argsObj->active,
-                             $argsObj->tcasePrefix, $argsObj->is_public) )
-    {
+                             $argsObj->tcasePrefix, $argsObj->is_public) ) {
       $op->msg = '';
       $tprojectMgr->activate($argsObj->itemID,$argsObj->active);
       
@@ -582,8 +580,7 @@ function edit(&$argsObj,&$tprojectMgr)
 
 
 */
-function crossChecks($argsObj,&$tprojectMgr)
-{
+function crossChecks($argsObj,&$tprojectMgr) {
   $op = new stdClass();
   $updateAdditionalSQLFilter = null ;
   $op = $tprojectMgr->checkName($argsObj->tprojectName);
@@ -592,29 +589,23 @@ function crossChecks($argsObj,&$tprojectMgr)
   $check_op['msg'] = array();
   $check_op['status_ok'] = $op['status_ok'];
 
-  if($argsObj->doAction == 'doUpdate')
-  {
+  if($argsObj->doAction == 'doUpdate') {
     $updateAdditionalSQLFilter = " testprojects.id <> {$argsObj->itemID}";
   }
-    
-  if($check_op['status_ok'])
-  {
-    if($tprojectMgr->get_by_name($argsObj->tprojectName,$updateAdditionalSQLFilter))
-    {
+
+  if($check_op['status_ok']) {
+    if($tprojectMgr->get_by_name($argsObj->tprojectName,$updateAdditionalSQLFilter)) {
       $check_op['msg'][] = sprintf(lang_get('error_product_name_duplicate'),$argsObj->tprojectName);
       $check_op['status_ok'] = 0;
     }
             
     // Check prefix no matter what has happen with previous check
     $rs = $tprojectMgr->get_by_prefix($argsObj->tcasePrefix,$updateAdditionalSQLFilter);
-    if(!is_null($rs))
-    {
+    if(!is_null($rs)) {
       $check_op['msg'][] = sprintf(lang_get('error_tcase_prefix_exists'),$argsObj->tcasePrefix);
       $check_op['status_ok'] = 0;
     }
-  }
-  else
-  {
+  } else {
     $check_op['msg'][] = $op['msg'];
   }
   return $check_op;
@@ -687,28 +678,37 @@ function doDelete($argsObj,&$tprojectMgr) {
  * @internal revisions
  *
  */
-function initializeGui(&$dbHandler,$argsObj)
-{
+function initializeGui(&$dbHandler,$argsObj,&$tprojMgr) {
 
   $guiObj = $argsObj;
   $guiObj->canManage = $argsObj->user->hasRight($dbHandler,"mgt_modify_product");
   $guiObj->found = 'yes';
 
-  $ent2loop = array('tlIssueTracker' => 'issueTrackers', 'tlCodeTracker' => 'codeTrackers',
+  $ent2loop = array('tlIssueTracker' => 'issueTrackers', 
+                    'tlCodeTracker' => 'codeTrackers',
                     'tlReqMgrSystem' => 'reqMgrSystems');
   
-  foreach($ent2loop as $cl => $pr)
-  {
+  foreach($ent2loop as $cl => $pr) {
     $mgr = new $cl($dbHandler);
     $guiObj->$pr = $mgr->getAll();
     unset($mgr);
   }
+
+  $guiObj->itemID = $argsObj->itemID;
+  $guiObj->tproject_id = $argsObj->tproject_id;
+  $guiObj->tplan_id = $argsObj->tplan_id;
+
+
+  $guiObj->actions = $tprojMgr->getViewActions($argsObj);
+
   return $guiObj;
 }
 
 
-function checkRights(&$db,&$user)
-{
-  csrfguard_start();
+/**
+ *
+ */
+function checkRights(&$db,&$user) {
+  csrfguard_start(); //?? 20190812
   return $user->hasRight($db,'mgt_modify_product');
 }

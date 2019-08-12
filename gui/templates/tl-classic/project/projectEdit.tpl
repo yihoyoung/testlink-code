@@ -5,16 +5,14 @@
  *
  * @filesource  projectEdit.tpl
  *
- * @internal revisions
- * @since 1.9.14
  *
  *}
 {$cfg_section=$smarty.template|basename|replace:".tpl":""}
 {config_load file="input_dimensions.conf" section=$cfg_section}
 
 {* Configure Actions *}
-{$managerURL="lib/project/projectEdit.php"}
-{$editAction="$managerURL?doAction=edit&tprojectID="}
+{$managerURL=$gui->actions->managerURL}
+{$editAction=$gui->actions->editAction}
 
 {lang_get var="labels" 
   s='show_event_history,th_active,cancel,info_failed_loc_prod,invalid_query,
@@ -105,7 +103,7 @@ manageTracker('code_tracker_id','code_tracker_enabled');">
           onSubmit="javascript:return validateForm(this);">
     <table id="item_view" class="common" style="width:100%; padding:3px;">
 
-      {if $gui->tprojectID eq 0}
+      {if $gui->itemID eq 0}
         {if $gui->testprojects != ''}
        <tr>
          <td>{$labels.create_from_existent_tproject}</td>
@@ -320,10 +318,14 @@ manageTracker('code_tracker_id','code_tracker_enabled');">
         {if $gui->canManage == "yes"}
         <div class="groupBtn">
           <input type="hidden" name="doAction" value="{$doActionValue}" />
-          <input type="hidden" name="tprojectID" value="{$gui->tprojectID}" />
           <input type="submit" name="doActionButton" value="{$buttonValue}" />
           <input type="button" name="go_back" value="{$labels.cancel}" 
                  onclick="javascript: location.href=fRoot+'lib/project/projectView.php';" />
+
+          <input type="hidden" name="itemID" id="itemID" value="{$gui->itemID}">
+          <input type="hidden" name="tproject_id" id="tproject_id" value="{$gui->tproject_id}">
+          <input type="hidden" name="tplan_id" id="tplan_id" value="{$gui->tplan_id}">
+
         </div>
       {/if}
       </td></tr>

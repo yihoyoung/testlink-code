@@ -115,8 +115,7 @@ function initializeGui(&$dbHandler,&$argsObj) {
     initIntegrations($guiObj->tprojects,$guiObj->itemQty,$tplEngine);
   }  
 
-
-  $guiObj->actions = $tproject_mgr->getViewActions($ctx);
+  $guiObj->actions = $tproject_mgr->getViewActions($argsObj);
   return array($guiObj,$tplEngine);
 }
 
