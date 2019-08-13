@@ -6,17 +6,15 @@
  * Form to set test cases search criteria
  *
  * @filesource  tcSearchForm.php
- * @package         TestLink
- * @author          TestLink community
- * @copyright   2007-2013, TestLink community 
- * @link                http://www.teamst.org/index.php
+ * @package     TestLink
+ * @author      TestLink community
+ * @copyright   2007-2019, TestLink community 
+ * @link        http://www.testlink.org
  *
- * @internal revisions
- * @since 1.9.7
  *
 **/
 require_once("../../config.inc.php");
-require_once("../functions/common.php");
+require_once("common.php");
 testlinkInitPage($db);
 $templateCfg = templateConfiguration();
 

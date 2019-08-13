@@ -79,20 +79,20 @@
 {$divStyle="width:300px;padding: 0px 0px 0px 10px;"}
 {$aStyle="padding: 3px 15px;font-size:16px"}
 
-{$projectView="lib/project/projectView.php"}
-{$usersAssign="lib/usermanagement/usersAssign.php?featureType=testproject&featureID="}
-{$cfAssignment="lib/cfields/cfieldsTprojectAssign.php"}
-{$keywordsAssignment="lib/keywords/keywordsView.php?tproject_id="}
-{$platformsView="lib/platforms/platformsView.php?tproject_id="}
-{$cfieldsView="lib/cfields/cfieldsView.php?tproject_id="}
-{$issueTrackerView="lib/issuetrackers/issueTrackerView.php?tproject_id="}
-{$codeTrackerView="lib/codetrackers/codeTrackerView.php?tproject_id="}
-{$reqOverView="lib/requirements/reqOverview.php"}
-{$reqMonOverView="lib/requirements/reqMonitorOverview.php?tproject_id="}
-{$tcSearch="lib/testcases/tcSearch.php?doAction=userInput&tproject_id="}
-{$tcCreatedUser="lib/results/tcCreatedPerUserOnTestProject.php?do_action=uinput&tproject_id="}
-{$assignReq="lib/general/frmWorkArea.php?feature=assignReqs"}
-{$inventoryView="lib/inventory/inventoryView.php"}
+{$projectView=$gui->actions->projectView}
+{$usersAssign=$gui->actions->usersAssign}
+{$cfAssignment=$gui->actions->cfAssignment}
+{$keywordsAssignment=$gui->actions->keywordsAssignment}
+{$platformsView=$gui->actions->platformsView}
+{$cfieldsView=$gui->actions->cfieldsView}
+{$issueTrackerView=$gui->actions->issueTrackerView}
+{$codeTrackerView=$gui->actions->codeTrackerView}
+{$reqOverView=$gui->actions->reqOverView}
+{$reqMonOverView=$gui->actions->reqMonOverView}
+{$tcSearch=$gui->actions->tcSearch}
+{$tcCreatedUser=$gui->actions->tcCreatedUser}
+{$assignReq=$gui->actions->assignReq}
+{$inventoryView=$gui->actions->inventoryView}
 
 
 <div class="vertical_menu" style="float: left; margin:0px 10px 10px 0px; width: 320px;">

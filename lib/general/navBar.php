@@ -23,8 +23,7 @@ $smarty->display('navBar.tpl');
 /**
  * 
  */
-function getGrants(&$db,&$userObj)
-{
+function getGrants(&$db,&$userObj) {
   $grants = new stdClass();
   $grants->view_testcase_spec = $userObj->hasRight($db,"mgt_view_tc");
   return $grants;  
@@ -33,8 +32,7 @@ function getGrants(&$db,&$userObj)
 /**
  * 
  */
-function init_args(&$dbH)
-{
+function init_args(&$dbH) {
 	$iParams = array("testproject" => array(tlInputParameter::INT_N),
                    "caller" => array(tlInputParameter::STRING_N,1,6),
                    "viewer" => array(tlInputParameter::STRING_N, 0, 3)
@@ -42,8 +40,7 @@ function init_args(&$dbH)
 	$args = new stdClass();
 	$pParams = G_PARAMS($iParams,$args);
 
-  if( is_null($args->viewer) || $args->viewer == '' )
-  {
+  if( is_null($args->viewer) || $args->viewer == '' ) {
     $args->viewer = isset($_SESSION['viewer']) ? $_SESSION['viewer'] : null;
   }  
 
@@ -52,6 +49,7 @@ function init_args(&$dbH)
 
   // Check if any project exists to display error
   $args->newInstallation = false;
+  $args->tproject_id = $args->testproject;
   if($args->testproject <= 0) {
     $sch = tlObject::getDBTables(array('testprojects','nodes_hierarchy'));
     $sql = " SELECT NH.id, NH.name FROM {$sch['nodes_hierarchy']} NH " .
@@ -87,8 +85,7 @@ function initializeGui(&$db,&$args) {
     $gui->TestProjects = null;
   } 
 
-  $gui->tprojectID = intval(isset($_SESSION['testprojectID']) ? $_SESSION['testprojectID'] : 0);
-  $gui->tproject_id = $gui->tprojectID;
+  $gui->tproject_id = $gui->tprojectID = $args->tproject_id;
 
   if($gui->tproject_id <= 0 ) {
     $ckObj = new stdClass();
@@ -121,13 +118,10 @@ function initializeGui(&$db,&$args) {
   $gui->searchSize = tlStringLen($gui->tcasePrefix) + 
                      $guiCfg->dynamic_quick_tcase_search_input_size;
 
-
-
   $gui->TestPlanCount = 0; 
 
   $tprojectQty = $tproject_mgr->getItemCount();  
-  if($gui->TestProjectCount == 0 && $tprojectQty > 0)
-  {
+  if($gui->TestProjectCount == 0 && $tprojectQty > 0) {
     // User rights configurations does not allow access to ANY test project
     $_SESSION['testprojectTopMenu'] = '';
     $gui->tproject_id = 0;

@@ -49,8 +49,6 @@ if( null !== $tplCfg && isset($tplCfg[$tplKey]) ) {
   $tpl = $tplCfg->$tplKey;
 } 
 
-//var_dump($gui->grants);
-
 $smarty->assign('gui',$gui);
 $smarty->display($tpl);
 

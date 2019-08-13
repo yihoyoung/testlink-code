@@ -97,7 +97,7 @@ title bar + menu
   
 {if $gui->updateMainPage == 1}
   <script type="text/javascript">
-  parent.mainframe.location = "{$basehref}lib/general/mainPage.php";
+  parent.mainframe.location = "{$basehref}lib/general/mainPage.php?tproject_id={$gui->tproject_id}";
   </script>
 {/if}
 

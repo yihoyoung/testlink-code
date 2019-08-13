@@ -1609,8 +1609,8 @@ function initUserEnv(&$dbH,$opt=null) {
     $gui->access = getAccess($gui);
     $gui->showMenu = getMenuVisibility($gui);
     $gui->activeMenu = getActiveMenuOFF($gui->showMenu);
+    getActions($gui,$_SESSION['basehref']);
   }
-
   
   // Get Role Description to display.
   // This means get Effective Role that has to be calculated
@@ -1673,47 +1673,54 @@ function getActions(&$gui,$baseURL) {
   }
   $ctx .= "&tplan_id={$id}";
 
-  $gui->usersAssign = "$bb/usermanagement/usersAssign.php?{$ctx}&featureType=testproject&featureID=";
+  $actions = new stdClass();
+  $actions->usersAssign = "$bb/usermanagement/usersAssign.php?{$ctx}&featureType=testproject&featureID=";
 
-  $gui->userInfo = "$bb/usermanagement/userInfo.php?{$ctx}";
-  $gui->projectView = "$bb/project/projectView.php?{$ctx}";
+  $actions->userInfo = "$bb/usermanagement/userInfo.php?{$ctx}";
+  $actions->projectView = "$bb/project/projectView.php?{$ctx}";
 
-  $gui->cfAssignment = "$bb/cfields/cfieldsTprojectAssign.php?{$ctx}";
-  $gui->cfieldsView = "$bb/cfields/cfieldsView.php?{$ctx}";  
+  $actions->cfAssignment = "$bb/cfields/cfieldsTprojectAssign.php?{$ctx}";
+  $actions->cfieldsView = "$bb/cfields/cfieldsView.php?{$ctx}";  
 
-  $gui->keywordsAssignment = "$bb/keywords/keywordsView.php?{$ctx}";
-  $gui->platformsView = "$bb/platforms/platformsView.php?{$ctx}";
-  $gui->issueTrackerView = "$bb/issuetrackers/issueTrackerView.php?{$ctx}";
-  $gui->codeTrackerView = "$bb/codetrackers/codeTrackerView.php?{$ctx}";
-  $gui->reqOverView = "$bb/requirements/reqOverview.php?{$ctx}";
-  $gui->reqMonOverView = "$bb/requirements/reqMonitorOverview.php?{$ctx}";
-  $gui->tcSearch = "$bb/testcases/tcSearch.php?doAction=userInput&{$ctx}";
-  $gui->tcCreatedUser = "$bb/results/tcCreatedPerUserOnTestProject.php?do_action=uinput&{$ctx}=";
-  $gui->assignReq = "$bb/general/frmWorkArea.php?feature=assignReqs&{$ctx}";
-  $gui->inventoryView = "$bb/inventory/inventoryView.php?{$ctx}";
+  $actions->keywordsAssignment = "$bb/keywords/keywordsView.php?{$ctx}";
+  $actions->platformsView = "$bb/platforms/platformsView.php?{$ctx}";
+  $actions->issueTrackerView = "$bb/issuetrackers/issueTrackerView.php?{$ctx}";
+  $actions->codeTrackerView = "$bb/codetrackers/codeTrackerView.php?{$ctx}";
+  $actions->reqOverView = "$bb/requirements/reqOverview.php?{$ctx}";
+  $actions->reqMonOverView = "$bb/requirements/reqMonitorOverview.php?{$ctx}";
+  $actions->tcSearch = "$bb/testcases/tcSearch.php?doAction=userInput&{$ctx}";
+  $actions->tcCreatedUser = "$bb/results/tcCreatedPerUserOnTestProject.php?do_action=uinput&{$ctx}=";
+  $actions->assignReq = "$bb/general/frmWorkArea.php?feature=assignReqs&{$ctx}";
+  $actions->inventoryView = "$bb/inventory/inventoryView.php?{$ctx}";
 
   $pp = $bb . '/plan';
-  $gui->planView = "$pp/planView.php?{$ctx}";
-  $gui->buildView = "$pp/buildView.php?{$ctx}";
-  $gui->mileView = "$pp/planMilestonesView.php?{$ctx}";
-  $gui->platformAssign = "$bb/platforms/platformsAssign.php?{$ctx}";
+  $actions->planView = "$pp/planView.php?{$ctx}";
+  $actions->buildView = "$pp/buildView.php?{$ctx}";
+  $actions->mileView = "$pp/planMilestonesView.php?{$ctx}";
+  $actions->platformAssign = "$bb/platforms/platformsAssign.php?{$ctx}";
 
 
-  $gui->testcase_assignments =  
+  $actions->testcase_assignments =  
     "$bb/testcases/tcAssignedToUser.php?{$ctx}";
 
-  $gui->milestonesView = "$bb/plan/planMilestonesView.php?{$ctx}";
+  $actions->milestonesView = "$bb/plan/planMilestonesView.php?{$ctx}";
 
 
   $launcher = $_SESSION['basehref'] . 
     'lib/general/frmWorkArea.php?{$ctx}&feature=';
 
-  $gui->planAddTC = $launcher . 'planAddTC?{$ctx}';
-  $gui->executeTest = $launcher . 'executeTest?{$ctx}';
-  $gui->setTestUrgency = $launcher . 'test_urgency?{$ctx}';
-  $gui->planUpdateTC = $launcher . 'planUpdateTC?{$ctx}';
-  $gui->showNewestTCV = $launcher . 'newest_tcversions?{$ctx}';
-  $gui->assignTCVExecution = $launcher . 'tc_exec_assignment?{$ctx}';
+  $actions->planAddTC = $launcher . 'planAddTC?{$ctx}';
+  $actions->executeTest = $launcher . 'executeTest?{$ctx}';
+  $actions->setTestUrgency = $launcher . 'test_urgency?{$ctx}';
+  $actions->planUpdateTC = $launcher . 'planUpdateTC?{$ctx}';
+  $actions->showNewestTCV = $launcher . 'newest_tcversions?{$ctx}';
+  $actions->assignTCVExecution = $launcher . 'tc_exec_assignment?{$ctx}';
+
+  $gui->actions = $actions;
+  $p2l = get_object_vars($actions);
+  foreach( $p2l as $pp => $val) {
+    $gui->$pp = $actions->$pp;
+  }
 }
 
 /**
