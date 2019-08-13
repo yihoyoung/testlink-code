@@ -2,8 +2,6 @@
  Testlink Open Source Project - http://testlink.sourceforge.net/ 
  @filesource  mainPageLeft.tpl
  Purpose: smarty template - main page / site map                 
-                                                                 
- @internal revisions
 *}
 {lang_get var='labels' s='title_product_mgmt,href_tproject_management,href_admin_modules,
    href_assign_user_roles,href_cfields_management,system_config,
@@ -27,7 +25,17 @@
 {$display_left_block_top = false}
 {$display_left_block_bottom = false}
 
-{if $gui->testprojectID && 
+{$tproj_id = 0}
+{if isset($gui->testprojectID) && $gui->testprojectID > 0 }
+  {$tproj_id = $gui->testprojectID}
+{/if}
+
+{if $tproj_id == 0 && isset($gui->tproject_id) && $gui->tproject_id > 0 }
+  {$tproj_id = $gui->tproject_id}
+{/if}
+
+
+{if $tproj_id > 0 && 
    ($gui->grants.project_edit == "yes" || 
     $gui->grants.tproject_user_role_assignment == "yes" ||
     $gui->grants.cfield_management == "yes" || 
@@ -37,7 +45,7 @@
     {$display_left_block_1=true}
 {/if}
 
-{if $gui->testprojectID && 
+{if $tproj_id && 
    ($gui->grants.cfield_management || 
     $gui->grants.cfield_assignment || 
     $gui->grants.issuetracker_management ||
@@ -47,12 +55,12 @@
    {$display_left_block_2=true}
 {/if}
 
-{if $gui->testprojectID && $gui->opt_requirements == TRUE && 
+{if $tproj_id && $gui->opt_requirements == TRUE && 
     ($gui->grants.reqs_view == "yes" || $gui->grants.reqs_edit == "yes" || $gui->grants.monitor_req == "yes" || $gui->grants.req_tcase_link_management == "yes")}
     {$display_left_block_3=true}
 {/if}
 
-{if $gui->testprojectID && $gui->grants.view_tc == "yes"}
+{if $tproj_id && $gui->grants.view_tc == "yes"}
     {$display_left_block_4=true}
 {/if}
 
@@ -107,11 +115,11 @@
     {/if}
 
     {if $gui->grants.issuetracker_management || $gui->grants.issuetracker_view}
-      <a href="{$issueTrackerView}{$gui->testprojectID}" class="list-group-item" style="{$aStyle}">{$labels.href_issuetracker_management}</a>
+      <a href="{$issueTrackerView}" class="list-group-item" style="{$aStyle}">{$labels.href_issuetracker_management}</a>
     {/if}
 
     {if $gui->grants.codetracker_management || $gui->grants.codetracker_view}
-      <a href="{$codeTrackerView}{$gui->testprojectID}" class="list-group-item" style="{$aStyle}">
+      <a href="{$codeTrackerView}" class="list-group-item" style="{$aStyle}">
       {$labels.href_codetracker_management}</a>
     {/if}
   </div>
@@ -125,7 +133,7 @@
     {/if}
 
     {if $gui->grants.tproject_user_role_assignment == "yes"}
-      <a href="{$usersAssign}{$gui->testprojectID}" class="list-group-item" style="{$aStyle}">{$labels.href_assign_user_roles}</a>
+      <a href="{$usersAssign}" class="list-group-item" style="{$aStyle}">{$labels.href_assign_user_roles}</a>
     {/if}
     
     {if $gui->grants.cfield_management == "yes"}
@@ -133,11 +141,11 @@
     {/if}
     
     {if $gui->grants.keywords_view == "yes"}
-      <a href="{$keywordsAssignment}{$gui->testprojectID}" class="list-group-item" style="{$aStyle}">{$labels.href_keywords_manage}</a>
+      <a href="{$keywordsAssignment}" class="list-group-item" style="{$aStyle}">{$labels.href_keywords_manage}</a>
     {/if}
 
     {if $gui->grants.platform_management || $gui->grants.platform_view}
-      <a href="{$platformsView}{$gui->testprojectID}" class="list-group-item" style="{$aStyle}">{$labels.href_platform_management}</a>
+      <a href="{$platformsView}" class="list-group-item" style="{$aStyle}">{$labels.href_platform_management}</a>
     {/if}
     
     {if $gui->grants.project_inventory_view || $gui->grants.project_inventory_management}
@@ -161,7 +169,7 @@
           <a href="{$assignReq}" class="list-group-item" style="{$aStyle}">{$labels.href_req_assign}</a>
        {/if}
        {if $gui->grants.monitor_req == "yes"}
-          <a href="{$reqMonOverView}{$gui->testprojectID}" class="list-group-item" style="{$aStyle}">{$labels.href_req_monitor_overview}</a>
+          <a href="{$reqMonOverView}" class="list-group-item" style="{$aStyle}">{$labels.href_req_monitor_overview}</a>
       {/if}
   </div>
 {/if}
@@ -176,7 +184,7 @@
        {/if}
       </a>
       {if $gui->hasTestCases}
-        <a href="{$tcSearch}{$gui->testprojectID}" class="list-group-item" style="{$aStyle}">{$labels.href_search_tc}</a>
+        <a href="{$tcSearch}" class="list-group-item" style="{$aStyle}">{$labels.href_search_tc}</a>
       {/if}    
       
     {if $gui->hasKeywords}  
@@ -186,7 +194,7 @@
     {/if}
       
      {if $gui->grants.modify_tc eq "yes"}
-       <a href="{$tcCreatedUser}{$gui->testprojectID}" class="list-group-item" style="{$aStyle}">{$labels.link_report_test_cases_created_per_user}</a>
+       <a href="{$tcCreatedUser}" class="list-group-item" style="{$aStyle}">{$labels.link_report_test_cases_created_per_user}</a>
      {/if}
     
     </div>

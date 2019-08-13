@@ -1554,8 +1554,9 @@ function initUserEnv(&$dbH,$opt=null) {
 
   $prjQty = $tprjMgr->getItemCount();
   $args->userIsBlindFolded = (is_null($prjSet) || count($prjSet) == 0) && $prjQty > 0;
+  $args->zeroTestProjects = ($prjQty == 0);
 
-  if($args->userIsBlindFolded) {
+  if( $args->userIsBlindFolded ) {
     $args->current_tproject_id = $args->tproject_id = 
       $args->tplan_id = 0;
     $_SESSION['testprojectTopMenu'] = '';
@@ -1785,8 +1786,6 @@ function getMenuVisibility(&$gui) {
  */
 function getGrantSet(&$dbHandler,&$argsObj) {
 
-  $forceToNo = $argsObj->userIsBlindFolded;
-
   // User has test project rights
   // This talks about Default/Global
   //
@@ -1833,26 +1832,25 @@ function getGrantSet(&$dbHandler,&$argsObj) {
     'exec_edit_notes','exec_delete','exec_ro_access',
     'exec_testcases_assigned_to_me','exec_assign_testcases');
 
-   if($forceToNo) {
-      $tr = array_merge($systemWideRights, $r2cTranslate);
-      $grants = array_fill_keys(array_keys($tr), 'no');
+  if( ($forceToNo = $argsObj->userIsBlindFolded) ) {
+    $tr = array_merge($systemWideRights, $r2cTranslate);
+    $grants = array_fill_keys(array_keys($tr), 'no');
 
-      foreach($r2cSame as $rr) {
-        $grants[$rr] = 'no';
-      }
-
-      return $grants;      
-   }  
+    foreach($r2cSame as $rr) {
+      $grants[$rr] = 'no';
+    }
+    return $grants;      
+  }  
   
-  
+  // Go ahead, continue with the analysis
   // First get system wide rights
   foreach($systemWideRights as $humankey => $right) {
     $grants[$humankey] = $argsObj->user->hasRight($dbHandler,$right); 
   }
 
   /** redirect admin to create testproject if not found */
-  if ($grants['project_edit'] && !isset($_SESSION['testprojectID'])) {
-    redirect($_SESSION['basehref'] . 'lib/project/projectEdit.php?doAction=create');
+  if( $grants['project_edit'] && $argsObj->zeroTestProjects ) {
+      redirect($_SESSION['basehref'] . 'lib/project/projectEdit.php?doAction=create');
     exit();
   }
 
@@ -1874,11 +1872,11 @@ function getGrantSet(&$dbHandler,&$argsObj) {
     }
   }
 
-  $gui->grants['tproject_user_role_assignment'] = "no";
+  $grants['tproject_user_role_assignment'] = "no";
   if( $argsObj->user->hasRight($dbH,"testproject_user_role_assignment",
-    $gui->tproject_id,-1) == "yes" ||
-      $argsObj->user->hasRight($db,"user_role_assignment",null,-1) == "yes" ) { 
-      $gui->grants['tproject_user_role_assignment'] = "yes";
+    $argsObj->tproject_id,-1) == "yes" ||
+      $argsObj->user->hasRight($db,"user_role_assignment",null,-1) == "yes" ) {
+      $grants['tproject_user_role_assignment'] = "yes";
   }
   return $grants;  
 }
@@ -1913,9 +1911,13 @@ function getActiveMenuOFF( $items ) {
  *
  */
 function doTestPlanSetup(&$gui) {
+  $loop2do = count($gui->tplanSet);
+  if( $loop2do == 0 ) {
+    return $gui->tplan_id;
+  }
+
   $index = 0;
   $found = 0;
-  $loop2do = count($gui->tplanSet);
   for($idx = 0; $idx < $loop2do; $idx++) {
     if( $gui->tplanSet[$idx]['id'] == $gui->tplan_id ) {
       $found = 1;
