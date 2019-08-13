@@ -29,9 +29,10 @@ $tcase_mgr = new testcase ($db);
 $tcase_cfg = config_get('testcase_cfg');
 $charset = config_get('charset');
 $filter = null;
+
 list($args,$filter) = init_args($tproject_mgr);
 
-$ga = initializeGui($args,$tproject_mgr);
+$ga = initializeGui($db,$args);
 $gx = $tcase_mgr->getTcSearchSkeleton($args);
 $gui = (object)array_merge((array)$ga,(array)$gx);
 
@@ -415,13 +416,10 @@ function init_args(&$tprojectMgr) {
 
   $dateFormat = config_get('date_format');
   $filter = null;
-  foreach($k2w as $key => $value)
-  {
-    if (isset($args->$key) && $args->$key != '') 
-    {
+  foreach($k2w as $key => $value) {
+    if (isset($args->$key) && $args->$key != '') {
       $da = split_localized_date($args->$key, $dateFormat);
-      if ($da != null) 
-      {
+      if ($da != null) {
         $args->$key = $da['year'] . "-" . $da['month'] . "-" . $da['day'] . $value; // set date in iso format
         $filter[$key] = " AND TCV.{$k2f[$key]} '{$args->$key}' ";
       }
@@ -436,9 +434,11 @@ function init_args(&$tprojectMgr) {
  * 
  *
  */
-function initializeGui(&$argsObj,&$tprojectMgr)
-{
+function initializeGui(&$dbH,&$argsObj) {
   $gui = new stdClass();
+  $opt = array();
+  list($add2args,$gui) = initUserEnv($dbH,$opt);
+
 
   $gui->pageTitle = lang_get('caption_search_form');
   $gui->warning_msg = '';
@@ -463,7 +463,8 @@ function initializeGui(&$argsObj,&$tprojectMgr)
   $gui->modification_date_to = null;
   $gui->search_important_notice = sprintf(lang_get('search_important_notice'),$argsObj->tprojectName);
 
-  // need to set values that where used on latest search (if any was done)
+  // need to set values that where used 
+  // on latest search (if any was done)
   // $gui->importance = config_get('testcase_importance_default');
 
   return $gui;
@@ -472,10 +473,9 @@ function initializeGui(&$argsObj,&$tprojectMgr)
 /**
  *
  */
-function initSearch(&$gui,&$argsObj,&$tprojectMgr)
-{
-  $gui->design_cf = $tprojectMgr->cfield_mgr->get_linked_cfields_at_design($argsObj->tproject_id,
-                                                                           cfield_mgr::ENABLED,null,'testcase');
+function initSearch(&$gui,&$argsObj,&$tprojectMgr) {
+  $gui->design_cf = $tprojectMgr->cfield_mgr->get_linked_cfields_at_design(
+    $argsObj->tproject_id,cfield_mgr::ENABLED,null,'testcase');
   
   $gui->cf_types = $tprojectMgr->cfield_mgr->custom_field_types;
   $gui->filter_by['design_scope_custom_fields'] = !is_null($gui->design_cf);
@@ -501,17 +501,13 @@ function initSearch(&$gui,&$argsObj,&$tprojectMgr)
   $jollyKilled = array("summary","steps","expected_results","preconditions","name");
   $txtin = array_merge($txtin, $jollyKilled);
   
-  foreach($txtin as $key )
-  {
+  foreach($txtin as $key ) {
     $gui->$key = $argsObj->$key;
   }  
 
-  if($argsObj->jolly != '')
-  {
-    foreach($jollyKilled as $key)
-    {
+  if($argsObj->jolly != '') {
+    foreach($jollyKilled as $key) {
       $gui->$key = '';  
     }  
   }  
-
 }

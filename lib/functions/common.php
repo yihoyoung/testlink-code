@@ -50,8 +50,7 @@ spl_autoload_register('tlAutoload');
 
 /** CSRF security functions. */
 /** TL_APICALL => TICKET 0007190 */
-if( !defined('TL_APICALL') )
-{
+if( !defined('TL_APICALL') ) {
   require_once("csrf.php");
 }  
 
@@ -425,33 +424,33 @@ function initProject(&$db,$hash_user_sel) {
   // Now we need to validate the TestPlan
   $ckObj->name = $ckCfg->prefix .  "TL_user${_SESSION['userID']}_proj${tproject_id}_testPlanId";
 
-  if($user_sel["tplan_id"] != 0)
-  {
+  if($user_sel["tplan_id"] != 0) {
     $ckObj->value = $user_sel["tplan_id"];
     $ckObj->expire = time()+60*60*24*90;
     tlSetCookie($ckObj);
-  } 
-  elseif (isset($_COOKIE[$ckObj->name])) 
-  {
+  } elseif (isset($_COOKIE[$ckObj->name])) {
     $tplan_id = intval($_COOKIE[$ckObj->name]);
   }
   
-  // check if the specific combination of testprojectid and testplanid is valid
-  $tplan_data = $_SESSION['currentUser']->getAccessibleTestPlans($db,$tproject_id,$tplan_id);
-  if(is_null($tplan_data))
-  {
-    // Need to get first accessible test plan for user, if any exists.
-    $tplan_data = $_SESSION['currentUser']->getAccessibleTestPlans($db,$tproject_id);
+  // check if the specific combination of testprojectid 
+  // and testplanid is valid
+  $gopt = array('output' => 'map');
+  $testPlanSet = (array)$_SESSION['currentUser']->getAccessibleTestPlans($db,$tproject_id,null,$gopt);
+
+  if( count($testPlanSet) > 0 && !isset($testPlanSet[$tplan_id]) ) {
+    // Use the first available
+    $testPlanSet = current($testPlanSet);
+    $tplan_id = $testPlanSet['id'];
+    setSessionTestPlan($testPlanSet);    
   }
-  
-  if(!is_null($tplan_data) && is_array($tplan_data))
-  {
-    $tplan_data = $tplan_data[0];
-    setSessionTestPlan($tplan_data);
-  }
-  
+
   // initialize structure of top menu for the user and the project
-  initTopMenu($db);   
+  initTopMenu($db,$tproject_id);   
+
+  $context = new stdClass();
+  $context->tproject_id = $tproject_id;
+  $context->tplan_id = $tplan_id;
+  return $context;
 }
 
 
@@ -469,58 +468,54 @@ function initProject(&$db,$hash_user_sel) {
  * @param string $userRightsCheckFunction (optional) name of function used to check user right needed
  *                           to execute the page
  */
-function testlinkInitPage(&$db, $initProject = FALSE, $dontCheckSession = false,
-                          $userRightsCheckFunction = null, $onFailureGoToLogin = false)
+function testlinkInitPage(&$db, $initProject = FALSE, $dontCheckSession = false,$userRightsCheckFunction = null, $onFailureGoToLogin = false)
 {
   static $pageStatistics = null;
 
   doSessionStart();
   setPaths();
-  if( isset($_SESSION['locale']) && !is_null($_SESSION['locale']) )
-  {
+  if( isset($_SESSION['locale']) && !is_null($_SESSION['locale']) ) {
     setDateTimeFormats($_SESSION['locale']);
   } 
   doDBConnect($db);
   
-  if (!$pageStatistics && (config_get('log_level') == 'EXTENDED'))
-  {
+  if (!$pageStatistics && (config_get('log_level') == 'EXTENDED')) {
     $pageStatistics = new tlPageStatistics($db);
   }
   
-  if (!$dontCheckSession)
-  {
+  if (!$dontCheckSession) {
     checkSessionValid($db);
   }
   
-  if ($userRightsCheckFunction)
-  {
+  if ($userRightsCheckFunction) {
     checkUserRightsFor($db,$userRightsCheckFunction,$onFailureGoToLogin);
   }
-   
-  // Init plugins
-  plugin_init_installed();
-   
-  // adjust Product and Test Plan to $_SESSION
-  if ($initProject)
-  {
-    initProject($db,$_REQUEST);
-  }
-   
+
   // used to disable the attachment feature if there are problems with repository path
   /** @TODO this check should not be done anytime but on login and using */
   global $g_repositoryType;
   global $g_attachments;
   global $g_repositoryPath;
   $g_attachments->disabled_msg = "";
-  if($g_repositoryType == TL_REPOSITORY_TYPE_FS)
-  {
+  if($g_repositoryType == TL_REPOSITORY_TYPE_FS) {
     $ret = checkForRepositoryDir($g_repositoryPath);
-    if(!$ret['status_ok'])
-    {
+    if(!$ret['status_ok']) {
       $g_attachments->enabled = FALSE;
       $g_attachments->disabled_msg = $ret['msg'];
     }
   }
+
+   
+  // Init plugins
+  plugin_init_installed();
+
+   
+  // adjust Product and Test Plan to $_SESSION
+  if ($initProject) {
+    return initProject($db,$_REQUEST);
+  }
+  
+  return null; 
 }
 
 
@@ -1707,14 +1702,15 @@ function getActions(&$gui,$baseURL) {
 
 
   $launcher = $_SESSION['basehref'] . 
-    'lib/general/frmWorkArea.php?{$ctx}&feature=';
+    "lib/general/frmWorkArea.php?feature=";
 
-  $actions->planAddTC = $launcher . 'planAddTC?{$ctx}';
-  $actions->executeTest = $launcher . 'executeTest?{$ctx}';
-  $actions->setTestUrgency = $launcher . 'test_urgency?{$ctx}';
-  $actions->planUpdateTC = $launcher . 'planUpdateTC?{$ctx}';
-  $actions->showNewestTCV = $launcher . 'newest_tcversions?{$ctx}';
-  $actions->assignTCVExecution = $launcher . 'tc_exec_assignment?{$ctx}';
+
+  $actions->planAddTC = $launcher . "planAddTC&{$ctx}";
+  $actions->executeTest = $launcher . "executeTest&{$ctx}";
+  $actions->setTestUrgency = $launcher . "test_urgency&{$ctx}";
+  $actions->planUpdateTC = $launcher . "planUpdateTC&{$ctx}";
+  $actions->showNewestTCV = $launcher . "newest_tcversions&{$ctx}";
+  $actions->assignTCVExecution = $launcher . "tc_exec_assignment&{$ctx}";
 
   $gui->actions = $actions;
   $p2l = get_object_vars($actions);

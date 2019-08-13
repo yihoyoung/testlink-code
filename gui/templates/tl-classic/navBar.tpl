@@ -38,7 +38,7 @@ title bar + menu
       <select style="font-size: 80%;position:relative; top:-1px;" name="testproject" onchange="this.form.submit();">
           {foreach key=tproject_id item=tproject_name from=$gui->TestProjects}
           <option value="{$tproject_id}" title="{$tproject_name|escape}"
-            {if $tproject_id == $gui->tprojectID} selected="selected" {/if}>
+            {if $tproject_id == $gui->tproject_id} selected="selected" {/if}>
             {$tproject_name|truncate:#TESTPROJECT_TRUNCATE_SIZE#|escape}</option>
         {/foreach}
       </select>
@@ -47,10 +47,10 @@ title bar + menu
 {/if}
 {$session.testprojectTopMenu}
 
-{if $gui->tprojectID}
-  {if $gui->grants->view_testcase_spec == "yes"}
+{if $gui->tproject_id}
+  {if $gui->grants.view_tc == "yes"}
     <form style="display:inline" target="mainframe" name="searchTC" id="searchTC"
-          action="lib/testcases/archiveData.php" method="get">
+          action="lib/testcases/archiveData.php?tproject_id={$gui->tproject_id}&tplan_id={$gui->tplan_id}" method="get">
     <input style="font-size: 80%; position:relative; top:-1px;" type="text" size="{$gui->searchSize}"
            title="{$labels.search_testcase}" name="targetTestCase" value="{$gui->tcasePrefix}" />
 
@@ -68,7 +68,7 @@ title bar + menu
     </form>
   {/if}
 
-  {if $gui->grants->view_testcase_spec == "yes"}
+  {if $gui->grants.view_tc == "yes"}
     <form style="display:inline" target="mainframe" name="fullTextSearch" id="fullTextSearch"
           action="lib/search/searchMgmt.php" method="post">
     <input type="hidden" name="caller" value="navBar">

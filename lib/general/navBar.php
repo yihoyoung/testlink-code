@@ -10,9 +10,9 @@
 **/
 require_once('../../config.inc.php');
 require_once("common.php");
-testlinkInitPage($db,('initProject' == 'initProject'));
+$context = testlinkInitPage($db,('initProject' == 'initProject'));
 
-$args = init_args($db);
+$args = init_args($db,$context);
 $gui = initializeGui($db,$args);
 
 $smarty = new TLSmarty();
@@ -32,10 +32,12 @@ function getGrants(&$db,&$userObj) {
 /**
  * 
  */
-function init_args(&$dbH) {
+function init_args(&$dbH,$context) {
 	$iParams = array("testproject" => array(tlInputParameter::INT_N),
+                   "tproject_id" => array(tlInputParameter::INT_N),
                    "caller" => array(tlInputParameter::STRING_N,1,6),
-                   "viewer" => array(tlInputParameter::STRING_N, 0, 3)
+                   "viewer" => array(tlInputParameter::STRING_N, 0, 3),
+                   "tplan_id" => array(tlInputParameter::INT_N)
                   );
 	$args = new stdClass();
 	$pParams = G_PARAMS($iParams,$args);
@@ -49,7 +51,8 @@ function init_args(&$dbH) {
 
   // Check if any project exists to display error
   $args->newInstallation = false;
-  $args->tproject_id = $args->testproject;
+  $args->tproject_id = intval($args->testproject);
+
   if($args->testproject <= 0) {
     $sch = tlObject::getDBTables(array('testprojects','nodes_hierarchy'));
     $sql = " SELECT NH.id, NH.name FROM {$sch['nodes_hierarchy']} NH " .
@@ -60,8 +63,13 @@ function init_args(&$dbH) {
     if(count($rs) == 0) {
       $args->newInstallation = true;
     }  
+
+    if( null != $context ) {
+      $args->tproject_id = $context->tproject_id;      
+    }
   }  
 
+  $args->testproject = $args->tproject_id;
 	return $args;
 }
 
@@ -69,10 +77,15 @@ function init_args(&$dbH) {
  *
  */
 function initializeGui(&$db,&$args) {
+
+  $gui = new stdClass();
+  $skip = array('skip' => array('tplan_id' => true));  
+  list($add2args,$gui) = initUserEnv($db,$skip); 
+
   $tproject_mgr = new testproject($db);
   $guiCfg = config_get("gui");
 
-  $gui = new stdClass();  
+  $gui->tproject_id = $gui->tprojectID = $args->tproject_id;
 
   $opx = array('output' => 'map_name_with_inactive_mark',
                'field_set' => $guiCfg->tprojects_combo_format,
@@ -83,11 +96,10 @@ function initializeGui(&$db,&$args) {
   $gui->TestProjectCount = sizeof($gui->TestProjects);
   if($gui->TestProjectCount == 0) {
     $gui->TestProjects = null;
+   $gui->tproject_id = $gui->tprojectID = 0;
   } 
 
-  $gui->tproject_id = $gui->tprojectID = $args->tproject_id;
-
-  if($gui->tproject_id <= 0 ) {
+  if( $gui->tproject_id <= 0 ) {
     $ckObj = new stdClass();
     $ckCfg = config_get('cookie');
 
@@ -113,8 +125,8 @@ function initializeGui(&$db,&$args) {
 
   $gui->tcasePrefix = '';
   $gui->searchSize = 8;
-  $gui->tcasePrefix = $tproject_mgr->getTestCasePrefix($gui->tproject_id) .
-                      config_get('testcase_cfg')->glue_character;
+  $gui->tcasePrefix = $tproject_mgr->getTestCasePrefix($gui->tproject_id) . config_get('testcase_cfg')->glue_character;
+
   $gui->searchSize = tlStringLen($gui->tcasePrefix) + 
                      $guiCfg->dynamic_quick_tcase_search_input_size;
 
@@ -122,18 +134,19 @@ function initializeGui(&$db,&$args) {
 
   $tprojectQty = $tproject_mgr->getItemCount();  
   if($gui->TestProjectCount == 0 && $tprojectQty > 0) {
-    // User rights configurations does not allow access to ANY test project
+    // User rights configurations does not allow 
+    // access to ANY test project
     $_SESSION['testprojectTopMenu'] = '';
     $gui->tproject_id = 0;
   }
 
-  if($gui->tproject_id) {
+  if( $gui->tproject_id ) {
     $testPlanSet = (array)$args->user->getAccessibleTestPlans($db,$gui->tproject_id);
     $gui->TestPlanCount = sizeof($testPlanSet);
 
-    $tplanID = isset($_SESSION['testplanID']) ? intval($_SESSION['testplanID']) : null;
-    if( !is_null($tplanID) ) {
-      // Need to set this info on session with first Test Plan from $testPlanSet
+    if( $args->tplan_id > 0 ) {
+      // Need to set this info on session with 
+      // first Test Plan from $testPlanSet
       // if this test plan is present on $testPlanSet
       //    OK we will set it on $testPlanSet as selected one.
       // else 
@@ -151,12 +164,13 @@ function initializeGui(&$db,&$args) {
       }
 
       if( $testPlanFound == 0 && is_array($testPlanSet) ) {
-        $tplanID = $testPlanSet[0]['id'];
-        setSessionTestPlan($testPlanSet[0]);      
+        $args->tplan_id = $testPlanSet[0]['id'];
+        // setSessionTestPlan($testPlanSet[0]);      
       } 
       $testPlanSet[$index]['selected']=1;
     }
   } 
+  $gui->tplan_id = $args->tplan_id;
 
   if ($gui->tproject_id && isset($args->user->tprojectRoles[$gui->tproject_id])) {
     // test project specific role applied
@@ -171,11 +185,13 @@ function initializeGui(&$db,&$args) {
                  $testprojectRole . $guiCfg->role_separator_close;
                    
 
-  // only when the user has changed project using the combo the _GET has this key.
-  // Use this clue to launch a refresh of other frames present on the screen
+  // only when the user has changed project using 
+  // the combo the _GET has this key.
+  // Use this clue to launch a refresh of other 
+  // frames present on the screen
   // using the onload HTML body attribute
   $gui->updateMainPage = 0;
-  if ($args->testproject) {
+  if( $args->tproject_id > 0) {
     // set test project ID for the next session
     $gui->updateMainPage = is_null($args->caller);
 
@@ -187,7 +203,6 @@ function initializeGui(&$db,&$args) {
     tlSetCookie($ckObj);
   }
 
-  $gui->grants = getGrants($db,$args->user);
   $gui->viewer = $args->viewer;
 
   $gui->plugins = array();
@@ -200,7 +215,8 @@ function initializeGui(&$db,&$args) {
   $sso = ($args->ssodisable ? '&ssodisable' : '');  
   $gui->logout = 'logout.php?viewer=' . $sso;
 
-  // to do not break logic
-  $gui->testprojectID = $gui->tproject_id;
+  // to do not break logic, it will be better to remove this
+  $gui->testprojectID = $gui->tproject_id;  
+  
   return $gui;
 }
