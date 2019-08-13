@@ -2,8 +2,6 @@
  Testlink Open Source Project - http://testlink.sourceforge.net/
  @filesource mainPageRight.tpl
  main page right side
- @internal revisions
- 
 *}
 {lang_get var="labels"
           s="current_test_plan,ok,testplan_role,msg_no_rights_for_tp,
@@ -17,10 +15,10 @@
              href_metrics_dashboard,href_add_remove_test_cases,
              href_exec_ro_access"}
 
-{$planView="lib/plan/planView.php"}
-{$buildView="lib/plan/buildView.php?tplan_id="}
-{$mileView="lib/plan/planMilestonesView.php"}
-{$platformAssign="lib/platforms/platformsAssign.php?tplan_id="}
+{$planView=$gui->actions->planView}
+{$buildView=$gui->actions->buildView}
+{$mileView=$gui->actions->mileView}
+{$platformAssign=$gui->actions->platformAssign}
 
 {$menuLayout=$tlCfg->gui->layoutMainPageRight}
 {$display_right_block_1=false}
@@ -113,7 +111,7 @@
 	    {/if}
 	    
 	    {if $gui->grants.testplan_create_build == "yes" and $gui->countPlans > 0}
-       	<a href="{$buildView}{$gui->testplanID}" class="list-group-item" style="{$aStyle}">{$labels.href_build_new}</a>
+       	<a href="{$buildView}" class="list-group-item" style="{$aStyle}">{$labels.href_build_new}</a>
       {/if}
 	    
       {if $gui->grants.testplan_milestone_overview == "yes" and $gui->countPlans > 0}
@@ -152,7 +150,7 @@
 	{if $display_right_block_3}
     <div class="list-group" style="{$divStyle}">
     {if $gui->grants.testplan_add_remove_platforms == "yes"}
-  	  <a href="{$platformAssign}{$gui->testplanID}" class="list-group-item" style="{$aStyle}">{$labels.href_platform_assign}</a>
+  	  <a href="{$platformAssign}" class="list-group-item" style="{$aStyle}">{$labels.href_platform_assign}</a>
     {/if} 
 		
 	  <a href="{$gui->launcher}?feature=planAddTC" class="list-group-item" style="{$aStyle}">{$labels.href_add_remove_test_cases}</a>
