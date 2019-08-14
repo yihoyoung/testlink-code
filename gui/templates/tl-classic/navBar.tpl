@@ -19,7 +19,7 @@ title bar + menu
   <a href="index.php" target="_parent">
   <img alt="Company logo" title="logo" src="{$smarty.const.TL_THEME_IMG_DIR}{$tlCfg->logo_navbar}" /></a>
 </div>
-  
+
 <div class="menu_title">
 
   <span class="bold">{$gui->whoami|escape}</span>
@@ -97,7 +97,7 @@ title bar + menu
   
 {if $gui->updateMainPage == 1}
   <script type="text/javascript">
-  parent.mainframe.location = "{$basehref}lib/general/mainPage.php?tproject_id={$gui->tproject_id}";
+  parent.mainframe.location = "{$basehref}lib/general/mainPage.php?caller=navBar&tproject_id={$gui->tproject_id}";
   </script>
 {/if}
 

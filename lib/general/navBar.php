@@ -62,11 +62,7 @@ function init_args(&$dbH,$context) {
 
     if(count($rs) == 0) {
       $args->newInstallation = true;
-    }  
-
-    if( null != $context ) {
-      $args->tproject_id = $context->tproject_id;      
-    }
+    } 
   }  
 
   $args->testproject = $args->tproject_id;
@@ -78,27 +74,30 @@ function init_args(&$dbH,$context) {
  */
 function initializeGui(&$db,&$args) {
 
+  $guiCfg = config_get("gui");
   $gui = new stdClass();
   $opt = array('forceCreateProj' => $args->newInstallation);
-  list($add2args,$gui) = initUserEnv($db,$opt); 
+  list($add2args,$gui,$tproject_mgr) = initUserEnv($db,$opt); 
 
-  $tproject_mgr = new testproject($db);
-  $guiCfg = config_get("gui");
+  // echo '<br>' . __FILE__ . ' -line-> ' . __LINE__; var_dump($gui->tproject_id);
+  if ($gui->tproject_id > 0) {
+     if ($args->tproject_id > 0) {
+       $gui->tproject_id = $gui->tprojectID = $args->tproject_id;
+     } else {
+      $args->tproject_id = $gui->tprojectID = $gui->tproject_id;
+     }  
+  }  
+  // echo '<br>' . __FILE__ . ' -line-> ' . __LINE__; var_dump($gui->tproject_id);
 
-  $gui->tproject_id = $gui->tprojectID = $args->tproject_id;
-
-  $opx = array('output' => 'map_name_with_inactive_mark',
-               'field_set' => $guiCfg->tprojects_combo_format,
-               'order_by' => $guiCfg->tprojects_combo_order_by);
-
-  $gui->TestProjects = $tproject_mgr->get_accessible_for_user($args->user->dbID,$opx);
-
+  //var_dump($gui->prjSet);
+  $gui->TestProjects = $gui->prjSet;  
   $gui->TestProjectCount = sizeof($gui->TestProjects);
   if($gui->TestProjectCount == 0) {
     $gui->TestProjects = null;
-   $gui->tproject_id = $gui->tprojectID = 0;
+    $gui->tproject_id = $gui->tprojectID = 0;
   } 
 
+  // echo '<br>' . __FILE__ . ' -line-> ' . __LINE__; var_dump($gui->tproject_id);
   if( $gui->tproject_id <= 0 ) {
     $ckObj = new stdClass();
     $ckCfg = config_get('cookie');
@@ -112,14 +111,14 @@ function initializeGui(&$db,&$args) {
     }  
   }
 
-
+  // echo '<br>' . __FILE__ . ' -line-> ' . __LINE__; var_dump($gui->tproject_id);
   if($gui->tproject_id <= 0 && !$args->newInstallation) {
     // Well instead of this, try to get the firts test project 
     // user is enabled to.
     if( 0 == $gui->TestProjectCount ) {
       throw new Exception("Can't work without Test Project ID", 1);
     }
-    $theOne = current(array_keys($gui->TestProjects));
+    $theOne = key($gui->TestProjects);
     $gui->tproject_id = $gui->tprojectID = $theOne;
   }  
 
@@ -130,16 +129,14 @@ function initializeGui(&$db,&$args) {
   $gui->searchSize = tlStringLen($gui->tcasePrefix) + 
                      $guiCfg->dynamic_quick_tcase_search_input_size;
 
-  $gui->TestPlanCount = 0; 
-
-  $tprojectQty = $tproject_mgr->getItemCount();  
-  if($gui->TestProjectCount == 0 && $tprojectQty > 0) {
+  if ($gui->TestProjectCount == 0 && (false == $gui->zeroTestProjects)) {
     // User rights configurations does not allow 
     // access to ANY test project
     $_SESSION['testprojectTopMenu'] = '';
     $gui->tproject_id = 0;
   }
 
+  $gui->TestPlanCount = 0; 
   if( $gui->tproject_id ) {
     $testPlanSet = (array)$args->user->getAccessibleTestPlans($db,$gui->tproject_id);
     $gui->TestPlanCount = sizeof($testPlanSet);
@@ -156,7 +153,7 @@ function initializeGui(&$db,&$args) {
       $testPlanFound=0;
       $loop2do=count($testPlanSet);
       for($idx=0; $idx < $loop2do; $idx++) {
-        if( $testPlanSet[$idx]['id'] == $tplanID ) {
+        if( $testPlanSet[$idx]['id'] == $args->tplan_id ) {
           $testPlanFound = 1;
           $index = $idx;
           break;
@@ -172,26 +169,13 @@ function initializeGui(&$db,&$args) {
   } 
   $gui->tplan_id = $args->tplan_id;
 
-  if ($gui->tproject_id && isset($args->user->tprojectRoles[$gui->tproject_id])) {
-    // test project specific role applied
-    $role = $args->user->tprojectRoles[$gui->tprojectID];
-    $testprojectRole = $role->getDisplayName();
-  } else {
-    // general role applied
-    $testprojectRole = $args->user->globalRole->getDisplayName();
-  } 
-  $gui->whoami = $args->user->getDisplayName() . ' ' . 
-                 $guiCfg->role_separator_open . 
-                 $testprojectRole . $guiCfg->role_separator_close;
-                   
-
   // only when the user has changed project using 
   // the combo the _GET has this key.
   // Use this clue to launch a refresh of other 
   // frames present on the screen
   // using the onload HTML body attribute
   $gui->updateMainPage = 0;
-  if( $args->tproject_id > 0) {
+  if( $gui->tproject_id > 0) {
     // set test project ID for the next session
     $gui->updateMainPage = is_null($args->caller);
 
@@ -202,6 +186,7 @@ function initializeGui(&$db,&$args) {
     $ckObj->value = $args->testproject;
     tlSetCookie($ckObj);
   }
+  $gui->updateNavBar = $gui->updateMainPage;
 
   $gui->viewer = $args->viewer;
 

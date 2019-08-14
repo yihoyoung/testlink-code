@@ -76,7 +76,7 @@ window.onload=function() {
 {* ----- Left Column -------------- *}
 {include file="mainPageLeft.tpl"}
 
-{if 1==0 && $gui->updateNavBar == 1}
+{if $gui->caller != 'navBar'}
   <script type="text/javascript">
   parent.titlebar.location = "{$basehref}lib/general/navBar.php?caller=mainPage&tproject_id={$gui->tproject_id}&tplan_id={$gui->tplan_id}";
   </script>

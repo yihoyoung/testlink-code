@@ -1531,14 +1531,15 @@ function tlSetCookie($ckObj) {
  *         tplanToGetEffectiveRole
  */
 function initUserEnv(&$dbH, $opt=null) {
+  $args = new stdClass();
+  $gui = new stdClass();
 
   $options = array('skip' => array('tplanForInit' => false,
                                    'tplanToGetEffectiveRole' => false), 
                    'forceCreateProj' => false);
-
   $options = array_merge_recursive($options,(array)$opt);
 
-  $args = new stdClass();
+
   $args->user = $_SESSION['currentUser'];
 
   $k2l = array( 'tproject_id' => 0, 'current_tproject_id' => 0,
@@ -1550,28 +1551,38 @@ function initUserEnv(&$dbH, $opt=null) {
     }
   } 
   
+
   $tprjMgr = new testproject($dbH);
-  $prjSet = $tprjMgr->get_accessible_for_user($args->user->dbID,array('output' => 'map_name_with_inactive_mark'));
+  $guiCfg = config_get("gui");
+  $opx = array('output' => 'map_name_with_inactive_mark',
+               'field_set' => $guiCfg->tprojects_combo_format,
+               'order_by' => $guiCfg->tprojects_combo_order_by);
 
-  $prjQty = $tprjMgr->getItemCount();
-  $args->userIsBlindFolded = (is_null($prjSet) || count($prjSet) == 0) && $prjQty > 0;
-  $args->zeroTestProjects = ($prjQty == 0);
+  $gui->prjSet = $tprjMgr->get_accessible_for_user($args->user->dbID, $opx);
 
+  $gui->prjQtyWholeSystem = $tprjMgr->getItemCount();
+  $gui->zeroTestProjects = ($gui->prjQtyWholeSystem == 0);
+  $args->zeroTestProjects = $gui->zeroTestProjects; 
+
+  $args->userIsBlindFolded = 
+    (is_null($gui->prjSet) || count($gui->prjSet) == 0) 
+    && $prjQtyWholeSystem > 0;
   if( $args->userIsBlindFolded ) {
-    $args->current_tproject_id = $args->tproject_id = 
-      $args->tplan_id = 0;
+    $args->current_tproject_id = 0;
+    $args->tproject_id = 0;
+    $args->tplan_id = 0;
     $_SESSION['testprojectTopMenu'] = '';
   }
 
   if( $args->tproject_id == 0 ) {
-    $args->tproject_id = key($prjSet);
+    $args->tproject_id = key($gui->prjSet);
   }
 
   if( $args->current_tproject_id == 0 ) {
     $args->current_tproject_id = $args->tproject_id;
   }
 
-  $gui = new stdClass();
+  $gui->caller = isset($_REQUEST['caller']) ? trim($_REQUEST['caller']) : '';
   $gui->tproject_id = $args->tproject_id;
   $gui->current_tproject_id = $args->current_tproject_id;
   $gui->tplan_id = $args->tplan_id;
@@ -1591,11 +1602,15 @@ function initUserEnv(&$dbH, $opt=null) {
     $gui->tplanSet = (array)$args->user->getAccessibleTestPlans($dbH,$args->tproject_id,$gpOpt);
     $gui->countPlans = count($gui->tplanSet);
   
+    //var_dump('TPRJ',$args->tproject_id);
+    //var_dump($gui->tplanSet);
     $tplan_id = $gui->tplan_id = $args->tplan_id;
     if (false == $options['skip']['tplanForInit']) {
       $tplan_id = $gui->tplan_id = $args->tplan_id = doTestPlanSetup($gui);    
     }
   } 
+
+  // echo 'debug' . __LINE__ . 'tpl::' . $tplan_id . '<br>';
 
   if( $doInitUX ) {
     $gui->grants = getGrantSet($dbH,$args);
@@ -1617,7 +1632,7 @@ function initUserEnv(&$dbH, $opt=null) {
   } 
 
   $eRoleObj = $args->user->getEffectiveRole($dbH,$gui->tproject_id,$tplan_id);
-
+  
   $cfg = config_get('gui');
   $gui->whoami = $args->user->getDisplayName() . ' ' . 
                  $cfg->role_separator_open . 
@@ -1648,7 +1663,11 @@ function initUserEnv(&$dbH, $opt=null) {
   if( $gui->current_tproject_id == null || 
       trim($gui->current_tproject_id) == '' ) {
   }
-  return array($args,$gui);
+
+  //echo 'debug caller:' . $gui->caller . ' - ' . $gui->whoami  . '<br>';
+  //echo 'debug Xtplan:' . $gui->tplan_id;
+
+  return array($args,$gui,$tprjMgr);
 }
 
 /**
@@ -1819,7 +1838,8 @@ function getGrantSet(&$dbHandler,&$argsObj) {
     'req_tcase_link_management','keyword_assignment',
     'issuetracker_management','issuetracker_view',
     'codetracker_management','codetracker_view',
-    'platform_management','cfield_management',
+    'platform_management','platform_view',
+    'cfield_management',
     'cfield_view','cfield_assignment',
     'project_inventory_view','project_inventory_management',
     'testplan_unlink_executed_testcases',
@@ -1936,6 +1956,7 @@ function doTestPlanSetup(&$gui) {
     $gui->tplan_id = $gui->tplanSet[$index]['id'];
   } 
 
+  // echo __FUNCTION__ . '::' . $gui->tplan_id;
   setSessionTestPlan($gui->tplanSet[$index]);         
   $gui->tplanSet[$index]['selected']=1;
 

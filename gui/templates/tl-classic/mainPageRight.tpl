@@ -67,6 +67,9 @@
  	   <form name="testplanForm" action="lib/general/mainPage.php">
        <input type="hidden" name="tproject_id" id="tproject_id"
               value="{$gui->tproject_id}">
+       <input type="hidden" name="caller" id="caller"
+              value="mainPageRight">
+
        {if $gui->countPlans > 0}
 		     {$labels.current_test_plan}:<br/>
 		     <select class="chosen-select" name="tplan_id" id="tplan_id"
@@ -190,7 +193,7 @@
     {/if}  
     </div>
   {/if}
-  {* ------------------------------------------------------------------------------------------ *}
+  {* ------------------------------------------------------------------------ *}
 
 </div>
 <script>
