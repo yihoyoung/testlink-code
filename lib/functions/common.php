@@ -1526,11 +1526,17 @@ function tlSetCookie($ckObj) {
 
 /**
  *
+ * $opt: skip map each element can be a map
+ *         tplanForInit 
+ *         tplanToGetEffectiveRole
  */
-function initUserEnv(&$dbH,$opt=null) {
+function initUserEnv(&$dbH, $opt=null) {
 
-  $options = array('skip' => null, 'forceCreateProj' => false);
-  $options = array_merge($options,(array)$opt);
+  $options = array('skip' => array('tplanForInit' => false,
+                                   'tplanToGetEffectiveRole' => false), 
+                   'forceCreateProj' => false);
+
+  $options = array_merge_recursive($options,(array)$opt);
 
   $args = new stdClass();
   $args->user = $_SESSION['currentUser'];
@@ -1577,24 +1583,16 @@ function initUserEnv(&$dbH,$opt=null) {
     // Force to avoid lot of processing
     $gui->hasTestCases = $gui->hasKeywords = true;
 
-    /*
-    $gui->hasTestCases = $tprjMgr->count_testcases($args->tproject_id) > 0 ? 1 : 0;
-
-    $gui->hasKeywords = false;
-    if($gui->hasTestCases) {
-      $gui->hasKeywords = $tprjMgr->hasKeywords($args->tproject_id);
-    }  
-    */
-
     $gui->num_active_tplans = $tprjMgr->getActiveTestPlansCount($args->tproject_id);
 
     // get Test Plans available for the user 
-    $gui->tplanSet = (array)$args->user->getAccessibleTestPlans($dbH,$args->tproject_id);
-    
+    // $gpOpt = array('output' => 'map');
+    $gpOpt = null;
+    $gui->tplanSet = (array)$args->user->getAccessibleTestPlans($dbH,$args->tproject_id,$gpOpt);
     $gui->countPlans = count($gui->tplanSet);
   
     $tplan_id = $gui->tplan_id = $args->tplan_id;
-    if( null == $options['skip'] || !$options['skip']['tplan_id'] ) {
+    if (false == $options['skip']['tplanForInit']) {
       $tplan_id = $gui->tplan_id = $args->tplan_id = doTestPlanSetup($gui);    
     }
   } 
@@ -1611,9 +1609,13 @@ function initUserEnv(&$dbH,$opt=null) {
   // This means get Effective Role that has to be calculated
   // using current test project & current test plan
   //
-  if( null != $options['skip'] && $options['skip']['tplan_id'] ) {
+  // SKIP is useful if you want to consider role only
+  // at test project level.
+  //
+  if( $options['skip']['tplanToGetEffectiveRole'] ) {
     $tplan_id = null;      
   } 
+
   $eRoleObj = $args->user->getEffectiveRole($dbH,$gui->tproject_id,$tplan_id);
 
   $cfg = config_get('gui');
@@ -1637,7 +1639,6 @@ function initUserEnv(&$dbH,$opt=null) {
     $_SESSION['getSecurityNotesOnMainPageDone'] = 1;
     $gui->securityNotes = getSecurityNotes($dbH);
   }  
-
   
   $gui->opt_requirements = 
     isset($_SESSION['testprojectOptions']->requirementsEnabled) ? 

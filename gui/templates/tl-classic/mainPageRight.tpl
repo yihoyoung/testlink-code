@@ -65,24 +65,23 @@
               inc_help_style="float: right;vertical-align: top;"}
 
  	   <form name="testplanForm" action="lib/general/mainPage.php">
+       <input type="hidden" name="tproject_id" id="tproject_id"
+              value="{$gui->tproject_id}">
        {if $gui->countPlans > 0}
 		     {$labels.current_test_plan}:<br/>
-		     <select class="chosen-select" name="testplan" onchange="this.form.submit();">
-		     	{section name=tPlan loop=$gui->arrPlans}
-		     		<option value="{$gui->arrPlans[tPlan].id}"
-		     		        {if $gui->arrPlans[tPlan].selected} selected="selected" {/if}
-		     		        title="{$gui->arrPlans[tPlan].name|escape}">
-		     		        {$gui->arrPlans[tPlan].name|escape}
+		     <select class="chosen-select" name="tplan_id" id="tplan_id"
+           onchange="this.form.submit();">
+		     	{section name=tPlan loop=$gui->tplanSet}
+		     		<option value="{$gui->tplanSet[tPlan].id}"
+		     		        {if $gui->tplanSet[tPlan].selected} selected="selected" {/if}
+		     		        title="{$gui->tplanSet[tPlan].name|escape}">
+		     		        {$gui->tplanSet[tPlan].name|escape}
 		     		</option>
 		     	{/section}
 		     </select>
 		     
 		     {if $gui->countPlans == 1}
 		     	<input type="button" onclick="this.form.submit();" value="{$labels.ok}"/>
-		     {/if}
-		     
-		     {if $gui->testplanRole neq null}
-		     	<br />{$labels.testplan_role} {$gui->testplanRole|escape}
 		     {/if}
 	     {else}
          {if $gui->num_active_tplans > 0}{$labels.msg_no_rights_for_tp}{/if}
@@ -103,7 +102,7 @@
     {/if}
   {/if}
 
-  {* ----------------------------------------------------------------------------- *}
+  {* --------------------------------------------------------------- *}
   {if $display_right_block_1}
     <div class="list-group" style="{$divStyle}">
       {if $gui->grants.mgt_testplan_create == "yes"}

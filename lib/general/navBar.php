@@ -79,8 +79,8 @@ function init_args(&$dbH,$context) {
 function initializeGui(&$db,&$args) {
 
   $gui = new stdClass();
-  $skip = array('skip' => array('tplan_id' => true));  
-  list($add2args,$gui) = initUserEnv($db,$skip); 
+  $opt = array('forceCreateProj' => $args->newInstallation);
+  list($add2args,$gui) = initUserEnv($db,$opt); 
 
   $tproject_mgr = new testproject($db);
   $guiCfg = config_get("gui");

@@ -654,12 +654,11 @@ class tlUser extends tlDBObject {
     $tprojects_role = $this->tprojectRoles;
     $tplans_role = $this->tplanRoles;
     $effective_role = $this->globalRole;
-    if(!is_null($tplans_role) && isset($tplans_role[$tplan_id]))
-    {
+
+    if(!is_null($tplans_role) && isset($tplans_role[$tplan_id])) {
       $effective_role = $tplans_role[$tplan_id];  
     }
-    else if(!is_null($tprojects_role) && isset($tprojects_role[$tproject_id]))
-    {
+    else if(!is_null($tprojects_role) && isset($tprojects_role[$tproject_id])) {
       $effective_role = $tprojects_role[$tproject_id];  
     }
     return $effective_role;
