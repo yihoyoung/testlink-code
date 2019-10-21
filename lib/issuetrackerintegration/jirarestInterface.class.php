@@ -390,15 +390,15 @@ class jirarestInterface extends issueTrackerInterface
           }  
         }
 
-        if(property_exists($opt, 'artifactVersion'))
-        {
-          // YES is plural!!
-          $issue['fields']['versions'] = array();
-          foreach( $opt->artifactVersion as $vv)
-          {
-            $issue['fields']['versions'][] = array('id' => (string)$vv);
-          }  
-        }
+        // if(property_exists($opt, 'artifactVersion'))
+        // {
+        //   // YES is plural!!
+        //   $issue['fields']['versions'] = array();
+        //   foreach( $opt->artifactVersion as $vv)
+        //   {
+        //     $issue['fields']['versions'][] = array('id' => (string)$vv);
+        //   }  
+        // }
 
 
 
@@ -807,9 +807,16 @@ class jirarestInterface extends issueTrackerInterface
         break;
 
         case 'radiobutton':
+          $dummy = array('value' => (string)$valueSet['value']);
+        break;
         case 'selectlist':
           // "customfield_10012": { "value": "red" }
-          $dummy = array('value' => (string)$valueSet['value']);
+          $dummy = array('id' => (string)$valueSet['value']);
+        break;
+
+        case 'userpicker':
+          // "customfield_10012": { "value": "admin" }
+          $dummy = array('name' => (string)$valueSet['value']);
         break;
 
         case 'labels':
